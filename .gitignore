@@ -30,3 +30,18 @@
 *.exe
 *.out
 *.app
+
+
+.metadata/
+RemoteSystemsTempFiles/
+BUILDS/
+mbed-os/
+ESS/MDK-ARM/ESS/
+Baro/MDK-ARM/Baro/
+[Dd]ebug/ 
+[Rr]elease/ 
+AirSpeed/MDK-ARM/AirSpeed/
+
+# User settings
+*.uvguix.*
+.settings/

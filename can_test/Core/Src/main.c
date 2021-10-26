@@ -46,7 +46,7 @@ UART_HandleTypeDef huart1;
 
 /* USER CODE BEGIN PV */
 
-CAN_TxHeaderTypeDef TxHeader;
+CAN_TxHeaderTypeDef TxHeader, TxHeader2;
 CAN_RxHeaderTypeDef RxHeader;
 uint8_t TxData[8] = {0,};
 uint8_t RxData[8] = {0,};
@@ -72,11 +72,9 @@ HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
     {
         HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_1);
 
-        if(RxHeader.StdId == 0x0178)
-        {
-                snprintf(trans_str, 128, "ID %04lX %d\n", RxHeader.StdId, RxData[0]);
-                HAL_UART_Transmit(&huart1, (uint8_t*)trans_str, strlen(trans_str), 100);
-        }
+		snprintf(trans_str, 128, "ID %04lX %d\n", RxHeader.StdId, RxData[0]);
+		HAL_UART_Transmit(&huart1, (uint8_t*)trans_str, strlen(trans_str), 100);
+
 
     }
 
@@ -129,7 +127,17 @@ int main(void)
 	TxHeader.DLC = 8;
 	TxHeader.TransmitGlobalTime = 0;
 
-	snprintf(TxData, "Hello\n", 6);
+	TxHeader2.StdId = 0x0333;
+	TxHeader2.ExtId = 0;
+	TxHeader2.RTR = CAN_RTR_DATA; //CAN_RTR_REMOTE
+	TxHeader2.IDE = CAN_ID_STD;   // CAN_ID_EXT
+	TxHeader2.DLC = 8;
+	TxHeader2.TransmitGlobalTime = 0;
+
+	for(uint8_t i = 0; i < 8; i++)
+	{
+	    TxData[i] = (i + 10);
+	}
 
 	HAL_CAN_Start(&hcan1);
 
@@ -141,24 +149,15 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-		uint32_t can_state = 0, free_level = 0;
-		can_state = HAL_CAN_GetState(&hcan1);
-		free_level = HAL_CAN_GetTxMailboxesFreeLevel(&hcan1);
-
-		char trans_str[20] = "\0";
-
-		sprintf(trans_str, "%d ,%d\n", can_state, free_level);
-		HAL_UART_Transmit(&huart1, (uint8_t*)trans_str, strlen(trans_str), 100);
-		HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_1);
-
 		HAL_CAN_AddTxMessage(&hcan1, &TxHeader, TxData, &TxMailbox);
 
-		/*while(HAL_CAN_GetTxMailboxesFreeLevel(&hcan1) == 0);
+		HAL_CAN_AddTxMessage(&hcan1, &TxHeader2, TxData, &TxMailbox);
+		//while(HAL_CAN_GetTxMailboxesFreeLevel(&hcan1) == 0);
 
 		if(HAL_CAN_AddTxMessage(&hcan1, &TxHeader, TxData, &TxMailbox) != HAL_OK)
 		{
 			  HAL_UART_Transmit(&huart1, (uint8_t*)"ER SEND\n", 8, 100);
-		}*/
+		}
 
 		HAL_Delay(500);
 
